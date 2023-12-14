@@ -1,42 +1,54 @@
-let mobilenet;
+let img;
+let detector;
 
-let video;
-let label = "";
+function preload() {
+  img = loadImage("images/dog_cat.jpeg");
+  // Coco SD 모델 로드
+  detector = ml5.objectDetector("cocossd");
+}
 
-function gotResults(error, results) {
+function gotDetections(error, results) {
   if (error) {
     console.error(error);
-  } else {
-    label = results[0].label;
-
-    mobilenet.predict(gotResults);
   }
-}
+  for (let i = 0; i < results.length; i++) {
+    let object = results[i];
+    console.log(object);
 
-function modelReady() {
-  console.log("Model is ready!");
-  mobilenet.predict(gotResults); // loop
-}
+    // 객체의 경계
+    stroke(0, 255);
+    strokeWeight(4);
+    noFill();
+    rect(object.x, object.y, object.width, object.height);
 
-// function imageReady() {
-//   image(puffin, 0, 0, width, height);
-// }
+    // 탐색된 객체
+    noStroke();
+    fill(0, 255, 0);
+    textSize(54);
+    text(object.label, object.x + 10, object.y + 54);
+
+    // 정확도
+    noStroke();
+    fill(0, 255, 0);
+    textSize(54);
+
+    // 소수점 둘째 자리까지 반올림
+    let roundedAccuracy = Math.round(object.confidence * 10000) / 100;
+    // 백분율로 변환
+    let percentageAccuracy = roundedAccuracy + "%";
+
+    text(`정확도: ${percentageAccuracy}`, object.x + 10, object.y + 120);
+    console.log(percentageAccuracy);
+  }
+  console.log(results);
+}
 
 function setup() {
-  createCanvas(640, 550);
-  video = createCapture(VIDEO);
-  video.hide();
-  background(0);
-
-  mobilenet = ml5.imageClassifier("MobileNet", video, modelReady);
-  // 이미지 분류 모델로 MobileNet을 사용한다, 분류 대상, 콜백 함수
+  createCanvas(img.width, img.height);
+  // console.log(detector);
+  image(img, 0, 0);
+  detector.detect(img, gotDetections);
 }
-
 function draw() {
-  background(0);
-  image(video, 0, 0);
-  // 캡쳐된 비디오 장면을 실제 캔버스 위에 그린다
-  fill(255);
-  textSize(32);
-  text(label, 10, height - 20);
+  // background(220);
 }
