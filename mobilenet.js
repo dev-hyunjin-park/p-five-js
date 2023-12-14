@@ -1,10 +1,10 @@
 let mobilenet;
-let classifier;
+let predictor;
 
 let video;
-let label = "test";
-let HappyButton;
-let SadButton;
+let value = 0;
+let slider;
+let addBtn;
 let trainButton;
 
 function modelReady() {
@@ -19,7 +19,7 @@ function videoReady() {
 function whileTraining(loss) {
   if (loss == null) {
     console.log("Training Complete");
-    classifier.classify(gotResults);
+    predictor.predict(gotResults);
   } else {
     console.log(loss);
   }
@@ -30,8 +30,8 @@ function gotResults(error, result) {
     console.error(error);
   } else {
     console.log(result);
-    label = result[0].label;
-    classifier.classify(gotResults);
+    value = result.value;
+    predictor.predict(gotResults);
   }
 }
 
@@ -41,27 +41,29 @@ function setup() {
   video.hide();
   background(0);
   mobilenet = ml5.featureExtractor("MobileNet", modelReady);
-  classifier = mobilenet.classification(video, videoReady);
+  predictor = mobilenet.regression(video, videoReady);
 
-  HappyButton = createButton("happy");
-  HappyButton.mousePressed(function () {
-    classifier.addImage("happy");
+  slider = createSlider(0, 1, 0.5, 0.01);
+
+  addBtn = createButton("add example image");
+  addBtn.mousePressed(function () {
+    predictor.addImage(slider.value());
   });
-  SadButton = createButton("sad");
-  SadButton.mousePressed(function () {
-    classifier.addImage("sad");
-  });
+
   trainButton = createButton("train");
   trainButton.mousePressed(function () {
-    classifier.train(whileTraining);
+    predictor.train(whileTraining);
   });
 }
 
 function draw() {
   background(0);
-  image(video, 0, 0);
-  // 캡쳐된 비디오 장면을 실제 캔버스 위에 그린다
+  image(video, 0, 0, 640, 550);
+  rectMode(CENTER);
+  fill(255, 0, 255);
+  rect(value * width, height / 2, 50, 50);
+
   fill(255);
   textSize(32);
-  text(label, 10, height - 20);
+  text(value, 10, height - 20);
 }
