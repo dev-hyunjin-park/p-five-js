@@ -1,21 +1,49 @@
+let video;
 let features;
 let knn;
 let labelP;
 let ready = false;
-
-let video;
+let x;
+let y;
 let label = "loading model";
-let HappyButton;
-let SadButton;
-let trainButton;
-let saveButton;
 
 function modelReady() {
-  console.log("Model is ready!");
+  console.log("MobileNet loaded!");
+  knn = ml5.KNNClassifier();
+  knn.load("./model.json", function () {
+    console.log("KNN Data loaded");
+    goClassify();
+  });
 }
 
-function videoReady() {
-  console.log("Video is ready!");
+function setup() {
+  createCanvas(320, 240);
+  video = createCapture(VIDEO);
+  video.size(320, 240);
+  // 좌우 반전: -1로 x축을 뒤집는다
+  video.style("transform", "scale(-1, 1");
+  features = ml5.featureExtractor("MobileNet", modelReady);
+  labelP = createP("need training data");
+  labelP.style("font-size", "32pt");
+  x = width / 2;
+  y = height / 2;
+}
+
+// 숫자 레이블을 원래의 텍스트 레이블로 변환하는 함수
+function convertToOriginalLabel(labelNumber) {
+  switch (labelNumber) {
+    case "0":
+      return "left";
+    case "1":
+      return "right";
+    case "2":
+      return "up";
+    case "3":
+      return "down";
+    // 레이블에 따라 추가적인 케이스를 필요에 따라 처리할 수 있습니다.
+    default:
+      return "unknown";
+  }
 }
 
 function goClassify() {
@@ -24,9 +52,10 @@ function goClassify() {
     if (error) {
       console.error(error);
     } else {
-      // console.log(result);
-      label = result.label;
-      labelP.html(result.label);
+      const numericLabel = result.label;
+      label = convertToOriginalLabel(numericLabel);
+      console.log(numericLabel, label);
+      labelP.html(label);
       goClassify();
     }
   });
@@ -44,24 +73,33 @@ function keyPressed() {
   } else if (key == "u") {
     knn.addExample(logits, "up");
     console.log("up");
+  } else if (key == "d") {
+    knn.addExample(logits, "down");
+    console.log("down");
+  } else if (key == " ") {
+    knn.addExample(logits, "stay");
+    console.log("stay");
+  } else if (key == "s") {
+    knn.save("model.json");
   }
-}
-
-function setup() {
-  createCanvas(640, 550);
-  video = createCapture(VIDEO);
-  video.hide();
-  background(0);
-  features = ml5.featureExtractor("MobileNet", modelReady);
-  knn = ml5.KNNClassifier();
-  labelP = createP("need training data");
-  labelP.style("font-size", "32pt");
 }
 
 function draw() {
-  image(video, 0, 0);
-  if (!ready && knn.getNumLabels() > 0) {
-    goClassify();
-    ready = true;
+  background(0);
+  fill(255);
+  ellipse(x, y, 24);
+
+  if (label == "left") {
+    x--;
+  } else if (label == "right") {
+    x++;
+  } else if (label == "up") {
+    y--;
+  } else if (label == "down") {
+    y++;
   }
+
+  // x, y값을 0과 width, height의 사이의 값으로 유지시킨다
+  x = constrain(x, 0, width);
+  y = constrain(y, 0, height);
 }
