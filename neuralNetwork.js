@@ -35,8 +35,8 @@ function setup() {
   // neural network option 지정
   let options = {
     inputs: ["x", "y"],
-    outputs: ["label"],
-    task: "classification",
+    outputs: ["frequency"],
+    task: "regression", // 회귀: 신경망의 아웃풋을 0-1 사이의 숫자로 변환
     debug: "true",
     learningRate: 0.5,
   };
@@ -45,7 +45,7 @@ function setup() {
   model = ml5.neuralNetwork(options);
 
   // load data
-  model.loadData("2023-12-16_21-45-12.json", dataLoaded);
+  // model.loadData("2023-12-16_21-45-12.json", dataLoaded);
 
   // load pre-trained model
   const modelDetails = {
@@ -53,7 +53,7 @@ function setup() {
     metadata: "model/model_meta.json",
     weights: "model/model.weights.bin",
   };
-  model.load(modelDetails, modelLoaded);
+  // model.load(modelDetails, modelLoaded);
 }
 
 function modelLoaded() {
@@ -100,7 +100,7 @@ function keyPressed() {
     console.log("starting training");
     model.normalizeData();
     let options = {
-      epochs: 200, // 전체 데이터 세트를 200번 반복해서 학습한다
+      epochs: 50, // 전체 데이터 세트를 n번 반복해서 학습한다
     };
     model.train(options, whileTraining, finishedTraining);
     // whileTraining은 매 epochs마다 실행된다
@@ -121,8 +121,9 @@ function mousePressed() {
   };
 
   if (state == "collection") {
+    let targetFrequency = notes[targetLabel];
     let target = {
-      label: targetLabel, // 현재 설정된 targetLabel 값을 가진 label을 출력 변수로 설정
+      frequency: targetFrequency,
     };
 
     model.addData(inputs, target); // 모델에 입력과 출력 데이터를 추가하여 학습 데이터 수집
@@ -135,8 +136,11 @@ function mousePressed() {
     noStroke();
     textAlign(CENTER, CENTER);
     text(targetLabel, mouseX, mouseY);
+
+    wave.freq(targetFrequency);
+    env.play();
   } else if (state == "prediction") {
-    model.classify(inputs, gotResults);
+    model.predict(inputs, gotResults);
   }
 }
 
@@ -145,6 +149,7 @@ function gotResults(error, results) {
     console.error(error);
     return;
   }
+  console.log(results);
   userStartAudio();
   stroke(0);
   fill(0, 0, 255, 100);
@@ -154,8 +159,7 @@ function gotResults(error, results) {
   noStroke();
   textAlign(CENTER, CENTER);
 
-  let label = results[0].label;
-  text(label, mouseX, mouseY);
-  wave.freq(notes[label]);
+  text(floor(results[0].value), mouseX, mouseY);
+  wave.freq(results[0].value);
   env.play();
 }
