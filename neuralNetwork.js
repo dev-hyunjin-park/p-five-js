@@ -43,12 +43,28 @@ function setup() {
 
   // 모델 초기화
   model = ml5.neuralNetwork(options);
+
   // load data
-  model.loadData("mouse-notes.json", dataLoaded);
+  model.loadData("2023-12-16_21-45-12.json", dataLoaded);
+
+  // load pre-trained model
+  const modelDetails = {
+    model: "model/model.json",
+    metadata: "model/model_meta.json",
+    weights: "model/model.weights.bin",
+  };
+  model.load(modelDetails, modelLoaded);
+}
+
+function modelLoaded() {
+  console.log("model loaded");
+  state = "prediction";
 }
 
 function dataLoaded() {
+  console.log("data loaded");
   let data = model.data;
+  console.log(model);
   for (let i = 0; i < data.length; i++) {
     let inputs = data[i].xs;
     let target = data[i].ys;
@@ -60,13 +76,13 @@ function dataLoaded() {
     textAlign(CENTER, CENTER);
     text(target.label, inputs.x, inputs.y);
   }
-  state = "training";
-  console.log("starting training");
-  model.normalizeData();
-  let options = {
-    epochs: 200, // 전체 데이터 세트를 200번 반복해서 학습한다
-  };
-  model.train(options, whileTraining, finishedTraining);
+  // state = "training";
+  // console.log("starting training");
+  // model.normalizeData();
+  // let options = {
+  //   epochs: 200, // 전체 데이터 세트를 200번 반복해서 학습한다
+  // };
+  // model.train(options, whileTraining, finishedTraining);
 }
 
 function whileTraining(epochs, loss) {
@@ -89,30 +105,13 @@ function keyPressed() {
     model.train(options, whileTraining, finishedTraining);
     // whileTraining은 매 epochs마다 실행된다
   } else if (key == "s") {
-    model.saveData("mouse-notes");
+    model.saveData();
+  } else if (key == "m") {
+    // custom name으로 저장할 경우 에러 있음
+    model.save();
   } else {
     targetLabel = key.toUpperCase();
   }
-}
-
-function gotResults(error, results) {
-  if (error) {
-    console.error(error);
-    return;
-  }
-  userStartAudio();
-  stroke(0);
-  fill(0, 0, 255, 100);
-  ellipse(mouseX, mouseY, 24);
-
-  fill(0);
-  noStroke();
-  textAlign(CENTER, CENTER);
-
-  let label = results[0].label;
-  text(label, mouseX, mouseY);
-  wave.freq(notes[label]);
-  env.play();
 }
 
 function mousePressed() {
@@ -139,4 +138,24 @@ function mousePressed() {
   } else if (state == "prediction") {
     model.classify(inputs, gotResults);
   }
+}
+
+function gotResults(error, results) {
+  if (error) {
+    console.error(error);
+    return;
+  }
+  userStartAudio();
+  stroke(0);
+  fill(0, 0, 255, 100);
+  ellipse(mouseX, mouseY, 24);
+
+  fill(0);
+  noStroke();
+  textAlign(CENTER, CENTER);
+
+  let label = results[0].label;
+  text(label, mouseX, mouseY);
+  wave.freq(notes[label]);
+  env.play();
 }
