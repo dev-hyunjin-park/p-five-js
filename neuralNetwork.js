@@ -5,15 +5,20 @@ let targetLabel = "C";
 let state = "collection";
 
 let notes = {
-  C: 261.6256, // 연주를 위한 주파수
+  C: 261.6256, // 연주를 위한 주파수 - 순서대로 도레미파솔라시 (4옥타브)
   D: 293.6648,
   E: 329.6276,
+  F: 349.2282,
+  G: 391.9954,
+  A: 440.0,
+  B: 493.8833,
 };
 
 let env, wave;
 
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(800, 1000);
+  background(226, 226, 226);
 
   // 소리 생성
   env = new p5.Envelope();
@@ -40,7 +45,7 @@ function setup() {
 }
 
 function whileTraining(epochs, loss) {
-  console.log(epochs);
+  // console.log(epochs);
 }
 
 function finishedTraining() {
@@ -67,7 +72,7 @@ function gotResults(error, results) {
     console.error(error);
     return;
   }
-  console.log(results);
+  userStartAudio();
   stroke(0);
   fill(0, 0, 255, 100);
   ellipse(mouseX, mouseY, 24);
@@ -75,11 +80,12 @@ function gotResults(error, results) {
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
+
   let label = results[0].label;
   text(label, mouseX, mouseY);
-  console.log(notes[label]);
   wave.freq(notes[label]);
   env.play();
+  // wave.start();
 }
 
 function mousePressed() {
