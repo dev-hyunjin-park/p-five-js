@@ -38,10 +38,35 @@ function setup() {
     outputs: ["label"],
     task: "classification",
     debug: "true",
+    learningRate: 0.5,
   };
 
   // 모델 초기화
   model = ml5.neuralNetwork(options);
+  // load data
+  model.loadData("mouse-notes.json", dataLoaded);
+}
+
+function dataLoaded() {
+  let data = model.data;
+  for (let i = 0; i < data.length; i++) {
+    let inputs = data[i].xs;
+    let target = data[i].ys;
+    stroke(0);
+    noFill();
+    ellipse(inputs.x, inputs.y, 24);
+    fill(0);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    text(target.label, inputs.x, inputs.y);
+  }
+  state = "training";
+  console.log("starting training");
+  model.normalizeData();
+  let options = {
+    epochs: 200, // 전체 데이터 세트를 200번 반복해서 학습한다
+  };
+  model.train(options, whileTraining, finishedTraining);
 }
 
 function whileTraining(epochs, loss) {
@@ -56,15 +81,18 @@ function finishedTraining() {
 function keyPressed() {
   if (key == "t") {
     state = "training";
-    console.log("starting");
+    console.log("starting training");
     model.normalizeData();
     let options = {
       epochs: 200, // 전체 데이터 세트를 200번 반복해서 학습한다
     };
     model.train(options, whileTraining, finishedTraining);
     // whileTraining은 매 epochs마다 실행된다
+  } else if (key == "s") {
+    model.saveData("mouse-notes");
+  } else {
+    targetLabel = key.toUpperCase();
   }
-  targetLabel = key.toUpperCase();
 }
 
 function gotResults(error, results) {
@@ -85,7 +113,6 @@ function gotResults(error, results) {
   text(label, mouseX, mouseY);
   wave.freq(notes[label]);
   env.play();
-  // wave.start();
 }
 
 function mousePressed() {
