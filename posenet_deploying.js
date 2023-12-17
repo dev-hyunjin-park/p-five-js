@@ -21,9 +21,9 @@ function setup() {
   };
   brain = ml5.neuralNetwork(options);
   const modelInfo = {
-    model: "model2/model.json",
-    metadata: "model2/model_meta.json",
-    weights: "model2/model.weights.bin",
+    model: "posenetModels/model.json",
+    metadata: "posenetModels/model_meta.json",
+    weights: "posenetModels/model.weights.bin",
   };
   brain.load(modelInfo, brainLoaded);
 }
@@ -49,6 +49,10 @@ function classifyPose() {
 }
 
 function gotResult(error, results) {
+  if (error) {
+    console.error(error);
+    return;
+  }
   if (results[0].confidence > 0.75) {
     poseLabel = results[0].label.toUpperCase();
   }

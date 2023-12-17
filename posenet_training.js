@@ -9,7 +9,7 @@ function setup() {
     debug: true,
   };
   brain = ml5.neuralNetwork(options);
-  brain.loadData("ymca.json", dataReady);
+  brain.loadData("2023-12-17_15-19-46.json", dataReady);
 }
 
 function dataReady() {
